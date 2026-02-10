@@ -929,6 +929,11 @@
                     <span>View Profile</span>
                 </div>
             </a>
+            <a href="{% url 'account_logout' %}" class="user-profile"
+                style="color: var(--accent-red); margin-top: 4px; justify-content: center;">
+                <span class="nav-item-icon" style="font-size: 16px;">🚪</span>
+                <span style="font-size: 13px; font-weight: 500;">Logout</span>
+            </a>
         </div>
     </aside>
     {% endif %}
