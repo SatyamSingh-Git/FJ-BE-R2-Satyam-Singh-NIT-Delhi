@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n %}
 
-{% block title %}{% trans "Sign In" %}{% endblock %}
+{% block title %}Sign In{% endblock %}
 
 {% block content %}
 <div class="auth-container">
@@ -9,35 +9,34 @@
         <div class="auth-header">
             <h1>
                 {% if user.is_authenticated %}
-                {% trans "Connect Account" %}
+                Connect Account
                 {% else %}
-                {% trans "Sign In" %}
+                Sign In
                 {% endif %}
             </h1>
             <p>
                 {% if process == "connect" %}
-                {% blocktrans with provider.name as provider %}Connect {{ provider }}{% endblocktrans %}
+                Connect {{ provider.name }}
                 {% else %}
-                {% blocktrans with provider.name as provider %}Sign In via {{ provider }}{% endblocktrans %}
+                Sign In via {{ provider.name }}
                 {% endif %}
             </p>
         </div>
 
         <div class="auth-body"
             style="text-align: center; margin-bottom: 32px; color: var(--text-secondary); line-height: 1.6;">
-            <p>{% blocktrans with provider.name as provider %}You are about to connect a new third party account from {{
-                provider }}.{% endblocktrans %}</p>
+            <p>You are about to connect a new third party account from {{ provider.name }}.</p>
         </div>
 
         <form method="post">
             {% csrf_token %}
             <button type="submit" class="btn btn-primary btn-full">
-                {% trans "Continue" %}
+                Continue
             </button>
         </form>
 
         <div class="auth-footer">
-            <p><a href="{% url 'account_login' %}">{% trans "Cancel" %}</a></p>
+            <p><a href="{% url 'account_login' %}">Cancel</a></p>
         </div>
     </div>
 </div>
