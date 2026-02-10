@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Sign In" %}{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>{% if user.is_authenticated %}{% trans "Connect Account" %}{% else %}{% trans "Sign In" %}{% endblock %}
+            </h1>
+            <p>{% if process == "connect" %}{% blocktrans with provider.name as provider %}Connect {{ provider }}{%
+                endblocktrans %}{% else %}{% blocktrans with provider.name as provider %}Sign In via {{ provider }}{%
+                endblocktrans %}{% endif %}</p>
+        </div>
+
+        <div class="auth-body"
+            style="text-align: center; margin-bottom: 32px; color: var(--text-secondary); line-height: 1.6;">
+            <p>{% blocktrans with provider.name as provider %}You are about to connect a new third party account from {{
+                provider }}.{% endblocktrans %}</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-full">
+                {% trans "Continue" %}
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p><a href="{% url 'account_login' %}">{% trans "Cancel" %}</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .auth-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    .auth-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 40px;
+        width: 100%;
+        max-width: 420px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .auth-header h1 {
+        font-size: 24px;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    .auth-header p {
+        color: var(--text-secondary);
+    }
+
+    .btn-full {
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        background: var(--accent-blue);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-full:hover {
+        background: var(--accent-blue-hover);
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 24px;
+        padding-top: 16px;
+    }
+
+    .auth-footer a {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 14px;
+    }
+
+    .auth-footer a:hover {
+        color: var(--text-primary);
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
