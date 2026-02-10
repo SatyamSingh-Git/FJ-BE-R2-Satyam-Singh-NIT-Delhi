@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Bank Imports{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h1 style="color: white;">📥 Bank Statement Import</h1>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'bank_import:upload' %}" class="btn btn-primary">Upload Statement</a>
+        <a href="{% url 'bank_import:rules' %}" class="btn btn-secondary">⚙️ Rules</a>
+    </div>
+</div>
+
+<div class="card">
+    <h3 class="card-title">Import History</h3>
+    {% if imports %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>File</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Transactions</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for imp in imports %}
+            <tr>
+                <td>{{ imp.file_name }}</td>
+                <td>{{ imp.file_type|upper }}</td>
+                <td>
+                    <span
+                        class="badge {% if imp.status == 'completed' %}badge-income{% elif imp.status == 'failed' %}badge-expense{% else %}badge{% endif %}">
+                        {{ imp.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ imp.imported_count }}/{{ imp.total_transactions }}</td>
+                <td>{{ imp.created_at|date:"M d, Y" }}</td>
+                <td>
+                    <a href="{% url 'bank_import:detail' imp.pk %}" class="btn btn-sm btn-secondary">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <h3>No imports yet</h3>
+        <p>Upload a bank statement (CSV or PDF) to automatically import transactions</p>
+        <a href="{% url 'bank_import:upload' %}" class="btn btn-primary">Upload Statement</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

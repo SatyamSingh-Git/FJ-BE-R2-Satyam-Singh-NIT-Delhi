@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Bank Statement{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="color: white; margin-bottom: 30px;">📤 Upload Bank Statement</h1>
+
+    <div class="card">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Select File</label>
+                <input type="file" name="file" class="form-control" accept=".csv,.pdf" required>
+                <small style="color: var(--gray);">Supports CSV and PDF bank statements</small>
+            </div>
+
+            <div class="alert alert-info"
+                style="background: rgba(79, 70, 229, 0.1); border: 1px solid var(--primary); color: var(--primary);">
+                <strong>💡 Tip:</strong> Most banks allow you to download statements as CSV or PDF from their online
+                banking portal.
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Upload Statement</button>
+        </form>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3 class="card-title">Supported Formats</h3>
+        <p style="color: var(--gray);">We can parse statements from most major banks. The file should contain:</p>
+        <ul style="color: var(--gray);">
+            <li>Transaction date</li>
+            <li>Description/Narration</li>
+            <li>Amount (debit/credit)</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

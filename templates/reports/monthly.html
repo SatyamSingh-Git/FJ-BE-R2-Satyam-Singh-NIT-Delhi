@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Monthly Report - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">📈 Monthly Performance</h1>
+        <p class="page-subtitle">Reviewing budgeted vs actual spending for {{ month_name }} {{ year }}</p>
+    </div>
+    <div class="page-actions">
+        <form method="get" style="display: flex; gap: 12px;">
+            <select name="month" class="form-control" style="width: auto;" id="month-select">
+                {% for m in months %}
+                <option value="{{ m.value }}">{{ m.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="year" class="form-control" style="width: auto;" id="year-select">
+                {% for y in years %}
+                <option value="{{ y }}">{{ y }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-secondary">Apply</button>
+        </form>
+        <a href="{% url 'reports:export_csv' %}?month={{ current_month }}&year={{ current_year }}"
+            class="btn btn-secondary">↓ Export CSV</a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('month-select').value = '{{ current_month }}';
+        document.getElementById('year-select').value = '{{ current_year }}';
+    });
+</script>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-card-label">Total Income</div>
+        <div class="stat-card-value green">₹{{ total_income|floatformat:2|intcomma }}</div>
+        <div class="stat-card-meta">
+            <span>{{ income_count }} transactions</span>
+        </div>
+        <div class="stat-progress">
+            <div class="stat-progress-bar" style="width: 100%; background: var(--accent-green);"></div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-label">Total Expenses</div>
+        <div class="stat-card-value red">₹{{ total_expenses|floatformat:2|intcomma }}</div>
+        <div class="stat-card-meta">
+            {% if expense_change >= 0 %}
+            <span class="negative">↑ {{ expense_change|floatformat:1 }}%</span>
+            {% else %}
+            <span class="positive">↓ {{ expense_change|floatformat:1|slice:"1:" }}%</span>
+            {% endif %}
+            <span>vs last month</span>
+        </div>
+        <div class="stat-progress">
+            <div class="stat-progress-bar" style="width: {{ expense_percent }}%; background: var(--accent-red);"></div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-label">Net Savings</div>
+        <div class="stat-card-value {% if net_savings >= 0 %}green{% else %}red{% endif %}">
+            {% if net_savings >= 0 %}+{% endif %}₹{{ net_savings|floatformat:2|intcomma }}
+        </div>
+        <div class="stat-card-meta">
+            {% if net_savings >= 0 %}
+            <span class="positive">↗ Above target</span>
+            {% else %}
+            <span class="negative">↘ Below target</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-label">Savings Rate</div>
+        <div class="stat-card-value blue">{{ savings_rate|floatformat:1 }}%</div>
+        <div class="stat-card-meta">
+            {% if savings_rate >= 20 %}
+            <span>🏆 Elite Saver</span>
+            {% elif savings_rate >= 10 %}
+            <span>👍 Good Progress</span>
+            {% else %}
+            <span>📊 Needs Attention</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Category Breakdown -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">💳 Detailed Category Breakdown</h3>
+            <div class="search-box" style="max-width: 200px;">
+                <input type="text" placeholder="Filter category..." id="categoryFilter">
+            </div>
+        </div>
+
+        <table class="table" id="categoryTable">
+            <thead>
+                <tr>
+                    <th>Category Name</th>
+                    <th>Budgeted</th>
+                    <th>Actual Spent</th>
+                    <th>Variance (₹)</th>
+                    <th>Variance (%)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in category_breakdown %}
+                <tr>
+                    <td>
+                        <span style="display: inline-flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 18px;">{{ cat.icon }}</span>
+                            {{ cat.name }}
+                        </span>
+                    </td>
+                    <td>₹{{ cat.budget|floatformat:0|intcomma }}</td>
+                    <td>₹{{ cat.spent|floatformat:0|intcomma }}</td>
+                    <td
+                        style="{% if cat.variance >= 0 %}color: var(--accent-green);{% else %}color: var(--accent-red);{% endif %}">
+                        {% if cat.variance >= 0 %}+{% endif %}₹{{ cat.variance|floatformat:0|intcomma }}
+                    </td>
+                    <td
+                        style="{% if cat.variance_percent >= 0 %}color: var(--accent-green);{% else %}color: var(--accent-red);{% endif %}">
+                        {% if cat.variance_percent >= 0 %}+{% endif %}{{ cat.variance_percent|floatformat:1 }}%
+                    </td>
+                    <td>
+                        {% if cat.variance >= 0 %}
+                        <span class="badge badge-income badge-status">Under Budget</span>
+                        {% else %}
+                        <span class="badge badge-expense badge-status">Overspent</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted);">No expense data for this
+                        period</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Quick Analysis -->
+    <div>
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom: 20px;">📊 Quick Analysis</h3>
+
+            {% if highest_variance %}
+            <div class="analysis-card">
+                <div class="analysis-card-header">
+                    <span class="analysis-label">Highest Variance</span>
+                    <span class="badge badge-expense">Overspent</span>
+                </div>
+                <div class="analysis-value">{{ highest_variance.name }}</div>
+                <div class="analysis-meta">
+                    <!-- FIXED TEMPLATE SYNTAX -->
+                    Exceeded by ₹{{ highest_variance.variance|floatformat:0|intcomma }} ({{
+                    highest_variance.variance_percent|floatformat:1 }}%)
+                </div>
+            </div>
+            {% endif %}
+
+            {% if best_category %}
+            <div class="analysis-card">
+                <div class="analysis-card-header">
+                    <span class="analysis-label">Most Saved</span>
+                    <span class="badge badge-income">Under Budget</span>
+                </div>
+                <div class="analysis-value">{{ best_category.name }}</div>
+                <div class="analysis-meta">
+                    <!-- FIXED TEMPLATE SYNTAX -->
+                    Saved ₹{{ best_category.variance|floatformat:0|intcomma }} ({{
+                    best_category.variance_percent|floatformat:1 }}%)
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="forecast-card">
+            <h3>📈 Monthly Trend</h3>
+            <p id="forecast-text"></p>
+            <a href="{% url 'budgets:list' %}" class="btn">Adjust Budgets</a>
+        </div>
+        <script>
+            (function () {
+                var savings = {{ projected_savings|default: 0
+            }};
+            var text = 'Based on your current spending patterns, you are on track to ';
+            if (savings >= 0) {
+                text += 'save ₹' + Math.abs(savings).toLocaleString('en-IN');
+            } else {
+                text += 'overspend by ₹' + Math.abs(savings).toLocaleString('en-IN');
+            }
+            text += ' by month end.';
+            document.getElementById('forecast-text').textContent = text;
+        }) ();
+        </script>
+
+        <div class="card" style="margin-top: 16px; padding: 16px; background: var(--bg-secondary);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">💡</span>
+                <div>
+                    <div style="font-size: 12px; color: var(--accent-blue); font-weight: 600;">PRO TIP</div>
+                    <div style="font-size: 13px; color: var(--text-secondary);">Set up custom alerts to stay under
+                        budget this month.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('categoryFilter').addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase();
+        document.querySelectorAll('#categoryTable tbody tr').forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

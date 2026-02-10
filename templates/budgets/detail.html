@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ budget.category.name }} Budget{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <a href="{% url 'budgets:list' %}" style="color: white; text-decoration: none;">← Back to Budgets</a>
+
+    <div class="card" style="margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+                <span style="font-size: 2.5rem;">{{ budget.category.icon }}</span>
+                <h2>{{ budget.category.name }} Budget</h2>
+                <span class="badge">{{ budget.get_period_display }}</span>
+                {% if not budget.is_active %}
+                <span class="badge" style="background: var(--gray);">Inactive</span>
+                {% endif %}
+            </div>
+            <a href="{% url 'budgets:update' budget.pk %}" class="btn btn-secondary">Edit</a>
+        </div>
+
+        <div style="margin: 30px 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="font-size: 2rem; font-weight: 700;">
+                    ₹{{ budget.spent|floatformat:0|intcomma }} <span style="color: var(--gray); font-weight: 400;">/ ₹{{ budget.amount|floatformat:0|intcomma }}</span>
+                </span>
+                <span
+                    style="font-size: 2rem; font-weight: 700; {% if budget.spent_percentage >= 100 %}color: var(--danger);{% elif budget.spent_percentage >= 80 %}color: var(--warning);{% else %}color: var(--secondary);{% endif %}">
+                    {{ budget.spent_percentage|floatformat:0 }}%
+                </span>
+            </div>
+
+            <div class="progress" style="height: 16px;">
+                <div class="progress-bar {% if budget.spent_percentage >= 100 %}red{% elif budget.spent_percentage >= 80 %}yellow{% else %}green{% endif %}"
+                    style="width: {% if budget.spent_percentage > 100 %}100{% else %}{{ budget.spent_percentage }}{% endif %}%">
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-top: 10px; color: var(--gray);">
+                <span>Started: {{ budget.start_date|date:"M d, Y" }}</span>
+                <span>Remaining: ₹{{ budget.remaining|floatformat:0|intcomma }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 class="card-title">Recent Transactions in Budget Period</h3>
+        {% if transactions %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td>{{ t.date|date:"M d" }}</td>
+                    <td>{{ t.description|truncatechars:30 }}</td>
+                    <td style="color: var(--danger);">-₹{{ t.amount|floatformat:0|intcomma }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color: var(--gray);">No transactions in this budget period.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

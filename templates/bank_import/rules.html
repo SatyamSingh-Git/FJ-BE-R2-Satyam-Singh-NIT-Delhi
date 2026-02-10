@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Categorization Rules{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h1 style="color: white;">⚙️ Categorization Rules</h1>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'bank_import:create_rule' %}" class="btn btn-primary">+ Add Rule</a>
+        <a href="{% url 'bank_import:list' %}" class="btn btn-secondary">← Back</a>
+    </div>
+</div>
+
+<div class="card">
+    <p style="color: var(--gray); margin-bottom: 20px;">
+        Rules automatically categorize imported transactions based on keywords in the description.
+    </p>
+
+    {% if rules %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Keyword</th>
+                <th>Match Type</th>
+                <th>Category</th>
+                <th>Matches</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rule in rules %}
+            <tr>
+                <td><code>{{ rule.keyword }}</code></td>
+                <td>{{ rule.get_match_type_display }}</td>
+                <td>{{ rule.category.icon }} {{ rule.category.name }}</td>
+                <td>{{ rule.match_count }}</td>
+                <td>
+                    <a href="{% url 'bank_import:delete_rule' rule.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <h3>No rules yet</h3>
+        <p>Create rules to automatically categorize transactions</p>
+        <a href="{% url 'bank_import:create_rule' %}" class="btn btn-primary">Add Rule</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

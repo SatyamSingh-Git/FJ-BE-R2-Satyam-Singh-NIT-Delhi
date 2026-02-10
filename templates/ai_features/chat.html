@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}AI Chat - Finance Tracker{% endblock %}
+
+{% block content %}
+<div style="display: flex; gap: 24px; height: calc(100vh - 64px);">
+    <!-- Chat Area -->
+    <div style="flex: 1; display: flex; flex-direction: column;">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">💬 AI Financial Assistant</h1>
+                <p class="page-subtitle">Ask me anything about your finances, budgets, or spending habits</p>
+            </div>
+            <div class="page-actions">
+                <form action="{% url 'ai_features:chat_clear' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary">🗑️ Clear Chat</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+            <!-- Messages -->
+            <div id="chatMessages"
+                style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+                {% for msg in messages %}
+                <div
+                    style="display: flex; gap: 12px; {% if msg.role == 'user' %}flex-direction: row-reverse;{% endif %}">
+                    <div
+                        style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; {% if msg.role == 'user' %}background: var(--accent-blue);{% else %}background: var(--accent-purple);{% endif %}">
+                        {% if msg.role == 'user' %}👤{% else %}🧠{% endif %}
+                    </div>
+                    <div style="max-width: 70%; {% if msg.role == 'user' %}text-align: right;{% endif %}">
+                        <div class="chat-content"
+                            style="padding: 16px 20px; border-radius: 16px; font-size: 14px; line-height: 1.6; {% if msg.role == 'user' %}background: var(--accent-blue); border-bottom-right-radius: 4px;{% else %}background: var(--bg-secondary); border-bottom-left-radius: 4px;{% endif %}">
+                            {{ msg.content|safe }}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                            {{ msg.created_at|timesince }} ago
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div
+                    style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--text-secondary);">
+                    <div style="font-size: 64px; margin-bottom: 16px;">🧠</div>
+                    <h3 style="font-size: 20px; color: var(--text-primary); margin-bottom: 8px;">Hi! I'm your AI
+                        Financial Assistant</h3>
+                    <p style="max-width: 400px; line-height: 1.6;">
+                        I can help you understand your spending patterns, suggest ways to save money,
+                        and answer any questions about your finances.
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Input -->
+            <form id="chatForm" action="{% url 'ai_features:chat_send' %}" method="post"
+                style="padding: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 12px;">
+                {% csrf_token %}
+                <input type="text" name="message" placeholder="Ask me anything about your finances..."
+                    class="form-control" style="flex: 1; font-size: 15px;" required autofocus>
+                <button type="submit" class="btn btn-primary" style="padding: 12px 32px;">
+                    Send →
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Suggestions Sidebar -->
+    <div style="width: 300px;">
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom: 16px;">💡 Try Asking</h3>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" class="suggestion-btn" onclick="setQuestion(this)">
+                    How much did I spend on food this month?
+                </button>
+                <button type="button" class="suggestion-btn" onclick="setQuestion(this)">
+                    What's my biggest expense category?
+                </button>
+                <button type="button" class="suggestion-btn" onclick="setQuestion(this)">
+                    How can I reduce my spending?
+                </button>
+                <button type="button" class="suggestion-btn" onclick="setQuestion(this)">
+                    Am I on track with my budget?
+                </button>
+                <button type="button" class="suggestion-btn" onclick="setQuestion(this)">
+                    Compare my spending to last month
+                </button>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 16px;">
+            <h3 class="card-title" style="margin-bottom: 16px;">📊 Your Context</h3>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <div style="font-size: 12px; color: var(--text-muted);">This Month's Income</div>
+                    <div style="font-size: 18px; font-weight: 600; color: var(--accent-green);">₹{{ monthly_income|floatformat:0|intcomma }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: var(--text-muted);">This Month's Expenses</div>
+                    <div style="font-size: 18px; font-weight: 600; color: var(--accent-red);">₹{{ monthly_expenses|floatformat:0|intcomma }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Net Savings</div>
+                    <div style="font-size: 18px; font-weight: 600;">₹{{ net_savings|floatformat:0|intcomma }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 16px; padding: 16px; background: var(--bg-secondary); border-radius: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="color: var(--accent-green);">●</span>
+                <span style="font-size: 12px; color: var(--text-muted);">AI STATUS</span>
+            </div>
+            <div style="font-size: 13px; color: var(--text-secondary);">
+                Powered by DeepSeek AI via OpenRouter
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .suggestion-btn {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: var(--text-secondary);
+        text-align: left;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .suggestion-btn:hover {
+        background: var(--bg-hover);
+        border-color: var(--accent-blue);
+        color: var(--text-primary);
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Handle chat submission
+    document.getElementById('chatForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const input = this.querySelector('input[name="message"]');
+        const message = input.value.trim();
+        if (!message) return;
+
+        // Add user message
+        const chatMessages = document.getElementById('chatMessages');
+        const userDiv = document.createElement('div');
+        userDiv.style.cssText = "display: flex; gap: 12px; flex-direction: row-reverse;";
+        userDiv.innerHTML = `
+            <div style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; background: var(--accent-blue);">👤</div>
+            <div style="max-width: 70%; text-align: right;">
+                <div style="padding: 16px 20px; border-radius: 16px; font-size: 14px; line-height: 1.6; background: var(--accent-blue); border-bottom-right-radius: 4px;">
+                    ${message.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Just now</div>
+            </div>
+        `;
+        chatMessages.appendChild(userDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        input.value = '';
+
+        // Send to server
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: 'message=' + encodeURIComponent(message)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.response) {
+                    const aiDiv = document.createElement('div');
+                    aiDiv.style.cssText = "display: flex; gap: 12px;";
+                    aiDiv.innerHTML = `
+                    <div style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; background: var(--accent-purple);">🧠</div>
+                    <div style="max-width: 70%;">
+                        <div style="padding: 16px 20px; border-radius: 16px; font-size: 14px; line-height: 1.6; background: var(--bg-secondary); border-bottom-left-radius: 4px;">
+                            ${marked.parse(data.response)}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Just now</div>
+                    </div>
+                `;
+                    chatMessages.appendChild(aiDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            });
+    });
+
+    // Auto-scroll chat to bottom
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Parse markdown for existing messages
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof marked !== 'undefined') {
+            document.querySelectorAll('.chat-content').forEach(el => {
+                el.innerHTML = marked.parse(el.innerHTML);
+            });
+        }
+    });
+
+    // Set suggestion question
+    function setQuestion(btn) {
+        document.querySelector('input[name="message"]').value = btn.textContent.trim();
+        document.querySelector('input[name="message"]').focus();
+    }
+</script>
+{% endblock %}

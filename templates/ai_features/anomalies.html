@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Spending Anomalies{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h1 style="color: white;">🚨 Spending Anomalies</h1>
+    <a href="{% url 'ai_features:insights' %}" class="btn btn-secondary">← Back to Insights</a>
+</div>
+
+<div class="card">
+    {% if anomalies %}
+    {% for a in anomalies %}
+    <div
+        style="padding: 20px; border-bottom: 1px solid var(--border); {% if a.severity == 'high' %}border-left: 4px solid var(--danger);{% elif a.severity == 'medium' %}border-left: 4px solid var(--warning);{% endif %}">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+                <span class="badge {% if a.severity == 'high' %}badge-expense{% else %}badge-income{% endif %}">
+                    {{ a.get_severity_display }}
+                </span>
+                <strong>{{ a.transaction.category.icon }} {{ a.transaction.category.name }}</strong>
+                <span style="color: var(--danger); font-weight: 600;">₹{{ a.transaction.amount|floatformat:0|intcomma }}</span>
+            </div>
+            <small style="color: var(--gray);">{{ a.created_at|date:"M d" }}</small>
+        </div>
+        <p style="margin: 10px 0;">{{ a.description }}</p>
+        <p style="color: var(--gray);">Expected: ~₹{{ a.expected_amount|floatformat:0|intcomma }}</p>
+
+        <form method="post" action="{% url 'ai_features:anomaly_review' a.pk %}"
+            style="display: flex; gap: 10px; margin-top: 10px;">
+            {% csrf_token %}
+            <button type="submit" name="false_positive" value="false" class="btn btn-sm btn-secondary">✓
+                Legitimate</button>
+            <button type="submit" name="false_positive" value="true" class="btn btn-sm btn-secondary">✗ False
+                Positive</button>
+        </form>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <h3>No anomalies detected</h3>
+        <p>Your spending patterns look normal! 🎉</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

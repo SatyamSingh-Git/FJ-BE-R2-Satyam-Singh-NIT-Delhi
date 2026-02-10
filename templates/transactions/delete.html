@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Transaction{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 0 auto;">
+    <div class="card" style="text-align: center;">
+        <h2 style="color: var(--danger); margin-bottom: 20px;">⚠️ Delete Transaction?</h2>
+
+        <p style="margin-bottom: 30px;">
+            Are you sure you want to delete this transaction?<br>
+            <strong>{{ transaction.category.icon }} {{ transaction.category.name }}</strong> -
+            {{ transaction.currency }} {{ transaction.amount }} on {{ transaction.date }}
+        </p>
+
+        <form method="post" style="display: flex; gap: 10px; justify-content: center;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Yes, Delete</button>
+            <a href="{% url 'transactions:detail' transaction.pk %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

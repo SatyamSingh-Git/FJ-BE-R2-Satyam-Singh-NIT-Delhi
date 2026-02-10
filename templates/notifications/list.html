@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - Finance Tracker{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h1 style="color: white;">🔔 Notifications ({{ unread_count }} unread)</h1>
+    {% if unread_count > 0 %}
+    <a href="{% url 'notifications:mark_all_read' %}" class="btn btn-secondary">Mark All Read</a>
+    {% endif %}
+</div>
+
+<div class="card">
+    {% if notifications %}
+    {% for n in notifications %}
+    <div
+        style="padding: 15px; border-bottom: 1px solid var(--border); {% if not n.is_read %}background: rgba(79, 70, 229, 0.05);{% endif %}">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+                {% if n.type == 'budget_warning' %}⚠️{% elif n.type == 'anomaly' %}🚨{% else %}📌{% endif %}
+                <strong>{{ n.title }}</strong>
+                {% if not n.is_read %}<span class="badge badge-income" style="font-size: 0.7rem;">NEW</span>{% endif %}
+            </div>
+            <small style="color: var(--gray);">{{ n.created_at|timesince }} ago</small>
+        </div>
+        <p style="margin: 10px 0; color: var(--gray);">{{ n.message }}</p>
+        {% if not n.is_read %}
+        <a href="{% url 'notifications:mark_read' n.pk %}" class="btn btn-sm btn-secondary">Mark as Read</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <h3>No notifications</h3>
+        <p>You're all caught up! 🎉</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

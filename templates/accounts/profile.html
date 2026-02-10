@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - Finance Tracker{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="color: white; margin-bottom: 30px;">👤 Profile</h1>
+
+    <div class="card">
+        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px;">
+            {% if profile.avatar %}
+            <img src="{{ profile.avatar.url }}"
+                style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+            {% else %}
+            <div
+                style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white;">
+                {{ user.email.0|upper }}
+            </div>
+            {% endif %}
+            <div>
+                <h2>{{ user.get_full_name|default:user.email }}</h2>
+                <p style="color: var(--gray);">{{ user.email }}</p>
+            </div>
+        </div>
+
+        <table style="width: 100%;">
+            <tr>
+                <td style="padding: 10px 0; color: var(--gray);">Preferred Currency</td>
+                <td style="padding: 10px 0; text-align: right;">{{ profile.preferred_currency }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px 0; color: var(--gray);">Email Notifications</td>
+                <td style="padding: 10px 0; text-align: right;" id="email-notif-status">Loading...</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px 0; color: var(--gray);">Budget Alert Threshold</td>
+                <td style="padding: 10px 0; text-align: right;">{{ profile.budget_alert_threshold }}%</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px 0; color: var(--gray);">Member Since</td>
+                <td style="padding: 10px 0; text-align: right;">{{ user.date_joined|date:"F Y" }}</td>
+            </tr>
+        </table>
+
+        <div style="margin-top: 20px;">
+            <a href="{% url 'accounts:profile_update' %}" class="btn btn-primary">Edit Profile</a>
+            <a href="{% url 'notifications:settings' %}" class="btn btn-secondary">Notification Settings</a>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="email-notif-val" value="{{ profile.email_notifications }}">
+<script>
+    var val = document.getElementById('email-notif-val').value;
+    document.getElementById('email-notif-status').textContent = (val === 'True') ? 'Enabled' : 'Disabled';
+</script>
+{% endblock %}

@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Add Transaction - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">➕ Add Transaction</h1>
+        <p class="page-subtitle">Record a new income or expense transaction</p>
+    </div>
+</div>
+
+<div style="max-width: 600px;">
+    <div class="card">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Transaction Type Selector -->
+            <div class="form-group">
+                <label class="form-label">Transaction Type</label>
+                <div style="display: flex; gap: 12px;">
+                    <label
+                        style="flex: 1; padding: 16px; background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 10px; cursor: pointer; text-align: center; transition: all 0.2s;"
+                        id="expenseLabel">
+                        <input type="radio" name="type" value="expense" checked style="display: none;">
+                        <span style="font-size: 24px; display: block; margin-bottom: 4px;">💸</span>
+                        <span style="font-weight: 500;">Expense</span>
+                    </label>
+                    <label
+                        style="flex: 1; padding: 16px; background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 10px; cursor: pointer; text-align: center; transition: all 0.2s;"
+                        id="incomeLabel">
+                        <input type="radio" name="type" value="income" style="display: none;">
+                        <span style="font-size: 24px; display: block; margin-bottom: 4px;">💰</span>
+                        <span style="font-weight: 500;">Income</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Amount -->
+            <div class="form-group">
+                <label class="form-label" for="amount">Amount *</label>
+                <div style="position: relative;">
+                    <span
+                        style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">₹</span>
+                    <input type="number" name="amount" id="amount" class="form-control"
+                        style="padding-left: 36px; font-size: 20px; font-weight: 600;" step="0.01" min="0" required
+                        placeholder="0.00">
+                </div>
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+                <label class="form-label" for="category">Category *</label>
+                <select name="category" id="category" class="form-control" required>
+                    <option value="">Select a category</option>
+                    <optgroup label="💸 Expenses" id="expenseCategories">
+                        {% for cat in expense_categories %}
+                        <option value="{{ cat.id }}">{{ cat.icon }} {{ cat.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="💰 Income" id="incomeCategories">
+                        {% for cat in income_categories %}
+                        <option value="{{ cat.id }}">{{ cat.icon }} {{ cat.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label class="form-label" for="description">Description</label>
+                <input type="text" name="description" id="description" class="form-control"
+                    placeholder="e.g., Grocery shopping at Walmart">
+                <div id="aiSuggestion" style="margin-top: 8px; display: none;">
+                    <span style="font-size: 12px; color: var(--text-muted);">🧠 AI suggests: </span>
+                    <button type="button" id="applySuggestion" class="btn btn-sm"
+                        style="padding: 4px 8px; font-size: 11px; background: var(--accent-purple); color: white;">Apply</button>
+                </div>
+            </div>
+
+            <!-- Date -->
+            <div class="form-group">
+                <label class="form-label" for="date">Date *</label>
+                <input type="date" name="date" id="date" class="form-control" value="{{ today }}" required>
+            </div>
+
+            <!-- Currency -->
+            <div class="form-group">
+                <label class="form-label" for="currency">Currency</label>
+                <select name="currency" id="currency" class="form-control">
+                    <option value="INR" selected>🇮🇳 INR - Indian Rupee</option>
+                    <option value="USD">🇺🇸 USD - US Dollar</option>
+                    <option value="EUR">🇪🇺 EUR - Euro</option>
+                    <option value="GBP">🇬🇧 GBP - British Pound</option>
+                </select>
+            </div>
+
+            <!-- Receipt Upload -->
+            <div class="form-group">
+                <label class="form-label">Receipt (Optional)</label>
+                <div style="border: 2px dashed var(--border-color); border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s;"
+                    id="dropzone">
+                    <input type="file" name="receipt" id="receipt" style="display: none;" accept="image/*,.pdf">
+                    <span style="font-size: 32px; display: block; margin-bottom: 8px;">📎</span>
+                    <p style="color: var(--text-secondary); font-size: 14px;">
+                        Drag & drop or <span style="color: var(--accent-blue);">click to upload</span>
+                    </p>
+                    <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">
+                        PNG, JPG or PDF up to 5MB
+                    </p>
+                </div>
+            </div>
+
+            <!-- Refund checkbox -->
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                    <input type="checkbox" name="is_refund" id="is_refund"
+                        style="width: 18px; height: 18px; accent-color: var(--accent-blue);">
+                    <span>This is a refund / return</span>
+                </label>
+            </div>
+
+            <!-- Submit -->
+            <div style="display: flex; gap: 12px; margin-top: 32px;">
+                <a href="{% url 'transactions:list' %}" class="btn btn-secondary" style="flex: 1;">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="flex: 2;">Add Transaction</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Transaction type toggle
+    const expenseLabel = document.getElementById('expenseLabel');
+    const incomeLabel = document.getElementById('incomeLabel');
+    const expenseRadio = expenseLabel.querySelector('input');
+    const incomeRadio = incomeLabel.querySelector('input');
+
+    function updateTypeStyles() {
+        if (expenseRadio.checked) {
+            expenseLabel.style.borderColor = 'var(--accent-red)';
+            expenseLabel.style.background = 'rgba(239, 68, 68, 0.1)';
+            incomeLabel.style.borderColor = 'var(--border-color)';
+            incomeLabel.style.background = 'var(--bg-secondary)';
+        } else {
+            incomeLabel.style.borderColor = 'var(--accent-green)';
+            incomeLabel.style.background = 'rgba(16, 185, 129, 0.1)';
+            expenseLabel.style.borderColor = 'var(--border-color)';
+            expenseLabel.style.background = 'var(--bg-secondary)';
+        }
+    }
+
+    expenseLabel.addEventListener('click', () => { expenseRadio.checked = true; updateTypeStyles(); });
+    incomeLabel.addEventListener('click', () => { incomeRadio.checked = true; updateTypeStyles(); });
+    updateTypeStyles();
+
+    // Dropzone
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('receipt');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = 'var(--accent-blue)';
+        dropzone.style.background = 'rgba(59, 130, 246, 0.1)';
+    });
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.style.borderColor = 'var(--border-color)';
+        dropzone.style.background = '';
+    });
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = 'var(--border-color)';
+        dropzone.style.background = '';
+        fileInput.files = e.dataTransfer.files;
+    });
+
+    // AI auto-categorize (when description changes)
+    let debounceTimer;
+    document.getElementById('description').addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const description = e.target.value;
+            if (description.length >= 3) {
+                fetch('{% url "ai_features:auto_categorize" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: `description=${encodeURIComponent(description)}`
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.category_id) {
+                            const suggestion = document.getElementById('aiSuggestion');
+                            suggestion.style.display = 'block';
+                            suggestion.querySelector('span').innerHTML = `🧠 AI suggests: <strong>${data.category_name}</strong>`;
+                            document.getElementById('applySuggestion').onclick = () => {
+                                document.getElementById('category').value = data.category_id;
+                                suggestion.style.display = 'none';
+                            };
+                        }
+                    });
+            }
+        }, 500);
+    });
+</script>
+{% endblock %}

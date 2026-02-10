@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Import Transactions - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">📥 Import Bank Statement</h1>
+        <p class="page-subtitle">Upload CSV or PDF files to automatically import transactions</p>
+    </div>
+</div>
+
+<!-- Progress Steps -->
+<div class="card" style="margin-bottom: 32px;">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 0;">
+        <div style="display: flex; align-items: center;">
+            <div
+                style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                ✓</div>
+            <span style="margin-left: 12px; font-weight: 500; color: var(--accent-blue);">UPLOAD</span>
+        </div>
+        <div style="width: 100px; height: 2px; background: var(--accent-blue); margin: 0 16px;"></div>
+        <div style="display: flex; align-items: center;">
+            <div
+                style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                ✓</div>
+            <span style="margin-left: 12px; font-weight: 500; color: var(--accent-blue);">MAP DATA</span>
+        </div>
+        <div style="width: 100px; height: 2px; background: var(--accent-blue); margin: 0 16px;"></div>
+        <div style="display: flex; align-items: center;">
+            <div
+                style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                3</div>
+            <span style="margin-left: 12px; font-weight: 500; color: var(--text-primary);">REVIEW</span>
+        </div>
+        <div style="width: 100px; height: 2px; background: var(--border-color); margin: 0 16px;"></div>
+        <div style="display: flex; align-items: center;">
+            <div
+                style="width: 40px; height: 40px; border-radius: 50%; background: var(--bg-hover); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                4</div>
+            <span style="margin-left: 12px; color: var(--text-muted);">CONFIRM</span>
+        </div>
+    </div>
+</div>
+
+<h2 style="font-size: 24px; margin-bottom: 8px;">Review & Validate</h2>
+<p style="color: var(--text-secondary); margin-bottom: 24px;">
+    Please review the mapped data below. We've detected {{ transactions|length }} transactions from "{{ import_record.filename }}".
+</p>
+
+<!-- File Info -->
+<div class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 20px 24px;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+        <div
+            style="width: 48px; height: 48px; background: var(--accent-blue); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+            📄</div>
+        <div>
+            <div style="font-weight: 600;">{{ statement.filename }}</div>
+            <div style="font-size: 13px; color: var(--text-muted);">{{ statement.file_size|filesizeformat }} •
+                Successfully
+                parsed</div>
+        </div>
+    </div>
+    <a href="{% url 'bank_import:upload' %}"
+        style="color: var(--accent-blue); text-decoration: none; font-size: 14px;">Change File</a>
+</div>
+
+<!-- Transactions Table -->
+<!-- Transactions Table & Actions -->
+{% if statement.status == 'completed' %}
+<form action="{% url 'bank_import:approve' statement.id %}" method="post">
+    {% csrf_token %}
+    {% endif %}
+
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Category</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td>
+                        {% if t.status == 'approved' %}
+                        <span class="badge badge-income badge-status">Approved</span>
+                        {% elif t.status == 'duplicate' %}
+                        <span class="badge badge-warning badge-status">Duplicate</span>
+                        {% else %}
+                        <span class="badge badge-primary badge-status">Verify</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if t.date %}
+                        {{ t.date|date:"M d, Y" }}
+                        {% else %}
+                        <span style="color: var(--accent-red);">INVALID</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ t.description|truncatechars:40 }}</td>
+                    <td
+                        style="{% if t.amount < 0 %}color: var(--accent-red);{% else %}color: var(--accent-green);{% endif %}">
+                        {% if t.amount >= 0 %}+{% endif %}₹{{ t.amount|floatformat:2|intcomma }}
+                    </td>
+                    <td>
+                        <select name="category_{{ t.id }}" class="form-control"
+                            style="background: var(--bg-hover); padding: 8px 12px;">
+                            <option value="">Uncategorized</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if t.suggested_category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted);">
+                        {% if statement.status == 'pending' %}
+                        Transactions will appear here after processing.
+                        {% else %}
+                        No transactions found in file.
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div
+            style="padding: 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; color: var(--text-muted);">
+                Showing {{ transactions|length }} of {{ statement.total_transactions }} transactions
+            </span>
+            <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-secondary btn-sm">←</button>
+                <button type="button" class="btn btn-secondary btn-sm">→</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: 32px 0;">
+        <a href="{% url 'bank_import:upload' %}" class="btn btn-secondary">← Back to Mapping</a>
+        <div style="display: flex; gap: 12px;">
+            {% if statement.status == 'pending' %}
+            <form action="{% url 'bank_import:process' statement.id %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Process File →</button>
+            </form>
+            {% elif statement.status == 'completed' %}
+            <button type="submit" class="btn btn-primary">Confirm & Import {{ transactions|length }} Transactions
+                →</button>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if statement.status == 'completed' %}
+</form>
+{% endif %}
+
+<!-- Feature Cards -->
+<div class="grid-3">
+    <div class="card" style="padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 12px;">💡</div>
+        <h4 style="font-size: 15px; margin-bottom: 8px;">Smart Mapping</h4>
+        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+            We automatically categorize transactions based on your previous history and patterns.
+        </p>
+    </div>
+
+    <div class="card" style="padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 12px;">🔒</div>
+        <h4 style="font-size: 15px; margin-bottom: 8px;">Secure Import</h4>
+        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+            Your data is processed locally in your browser. No sensitive info is stored until you confirm.
+        </p>
+    </div>
+
+    <div class="card" style="padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 12px;">⚠️</div>
+        <h4 style="font-size: 15px; margin-bottom: 8px;">Validation</h4>
+        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+            Missing info is highlighted in red. You can edit them directly in the table above.
+        </p>
+    </div>
+</div>
+{% endblock %}

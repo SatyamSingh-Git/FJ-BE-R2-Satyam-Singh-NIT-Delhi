@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Categories - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">📂 Expense Categories</h1>
+        <p class="page-subtitle">Manage your spending categories and track budgets</p>
+    </div>
+    <div class="page-actions">
+        <div class="search-box">
+            <input type="text" placeholder="Search categories..." id="categorySearch">
+        </div>
+        <a href="{% url 'categories:create' %}" class="btn btn-primary">+ Add New Category</a>
+    </div>
+</div>
+
+<!-- Summary Bar -->
+{% if total_budgeted > 0 %}
+<div class="summary-bar">
+    <div class="summary-item">
+        <span class="summary-label">Total Budgeted</span>
+        <span class="summary-value">₹{{ total_budgeted|floatformat:2|intcomma }}</span>
+    </div>
+    <div class="summary-item">
+        <span class="summary-label">Total Spent</span>
+        <span class="summary-value" style="color: var(--accent-green);">₹{{ total_spent|floatformat:2|intcomma }}</span>
+    </div>
+    <div class="summary-progress">
+        <div class="summary-progress-header">
+            <span style="font-size: 13px; color: var(--text-secondary);">Global Consumption</span>
+            <span style="font-size: 14px; font-weight: 600; color: var(--accent-green);">{{ consumption_percent|floatformat:1 }}%</span>
+        </div>
+        <div class="summary-progress-bar">
+            <div class="summary-progress-fill" style="width: {{ consumption_percent }}%;"></div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Expense Categories Section -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title" style="color: var(--accent-red);">💸 Expense Categories</h3>
+    </div>
+
+    <div class="category-grid" id="expenseCategories">
+        {% for cat in expense_categories %}
+        <div class="category-card {% if cat.budget_percent > 100 %}over-budget{% endif %}"
+            data-name="{{ cat.name|lower }}">
+            {% if cat.budget_percent > 100 %}
+            <span class="over-budget-badge">Over Budget</span>
+            {% endif %}
+            <div class="category-card-header">
+                <div class="category-icon" style="background: {{ cat.color }}20;">
+                    {{ cat.icon }}
+                </div>
+                <a href="{% url 'categories:update' cat.pk %}" class="category-menu">⋯</a>
+            </div>
+            <div class="category-name">{{ cat.name }}</div>
+            <div class="category-amount" style="{% if cat.budget_percent > 100 %}color: var(--accent-red);{% endif %}">
+                ₹{{ cat.total_amount|default:0|floatformat:0|intcomma }}
+            </div>
+            <div class="category-budget">
+                {{ cat.txn_count }} transaction{{ cat.txn_count|pluralize }}
+            </div>
+            {% if cat.budget_amount %}
+            <div class="category-progress">
+                <div class="category-progress-bar">
+                    <div class="category-progress-fill"
+                        style="width: {% if cat.budget_percent > 100 %}100{% else %}{{ cat.budget_percent|default:0 }}{% endif %}%; background: {% if cat.budget_percent > 100 %}var(--accent-red){% elif cat.budget_percent > 80 %}var(--accent-orange){% else %}{{ cat.color }}{% endif %};">
+                    </div>
+                </div>
+                <span class="category-progress-text"
+                    style="{% if cat.budget_percent > 100 %}color: var(--accent-red);{% elif cat.budget_percent > 80 %}color: var(--accent-orange);{% endif %}">{{ cat.budget_percent|default:0|floatformat:0 }}%</span>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p style="color: var(--text-muted); grid-column: span 4;">No expense categories yet.</p>
+        {% endfor %}
+
+        <!-- Add New Category Card -->
+        <a href="{% url 'categories:create' %}?type=expense" class="add-category-card">
+            <div class="add-category-icon">+</div>
+            <span>New Category</span>
+        </a>
+    </div>
+</div>
+
+<!-- Income Categories Section -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title" style="color: var(--accent-green);">💰 Income Categories</h3>
+    </div>
+
+    <div class="category-grid" id="incomeCategories">
+        {% for cat in income_categories %}
+        <div class="category-card" data-name="{{ cat.name|lower }}">
+            <div class="category-card-header">
+                <div class="category-icon" style="background: {{ cat.color }}20;">
+                    {{ cat.icon }}
+                </div>
+                <a href="{% url 'categories:update' cat.pk %}" class="category-menu">⋯</a>
+            </div>
+            <div class="category-name">{{ cat.name }}</div>
+            <div class="category-amount" style="color: var(--accent-green);">
+                ₹{{ cat.total_amount|default:0|floatformat:0|intcomma }}
+            </div>
+            <div class="category-budget">
+                {{ cat.txn_count }} transaction{{ cat.txn_count|pluralize }}
+            </div>
+        </div>
+        {% empty %}
+        <p style="color: var(--text-muted); grid-column: span 4;">No income categories yet.</p>
+        {% endfor %}
+
+        <!-- Add New Category Card -->
+        <a href="{% url 'categories:create' %}?type=income" class="add-category-card">
+            <div class="add-category-icon">+</div>
+            <span>New Category</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Category search functionality
+    document.getElementById('categorySearch').addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase();
+        document.querySelectorAll('.category-card[data-name]').forEach(card => {
+            const name = card.dataset.name;
+            if (name.includes(query)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

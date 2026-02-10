@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete {{ category.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 0 auto;">
+    <div class="card" style="text-align: center;">
+        <h2 style="color: var(--danger); margin-bottom: 20px;">⚠️ Delete Category?</h2>
+
+        {% if category.transaction_count > 0 %}
+        <div class="alert alert-error">
+            <strong>Cannot delete!</strong><br>
+            This category has {{ category.transaction_count }} transactions.
+            Please reassign or delete them first.
+        </div>
+        <a href="{% url 'categories:detail' category.pk %}" class="btn btn-secondary">Go Back</a>
+        {% else %}
+        <p style="margin-bottom: 30px;">
+            Are you sure you want to delete <strong>{{ category.icon }} {{ category.name }}</strong>?
+        </p>
+
+        <form method="post" style="display: flex; gap: 10px; justify-content: center;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Yes, Delete</button>
+            <a href="{% url 'categories:list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

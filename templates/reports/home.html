@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - Finance Tracker{% endblock %}
+
+{% block content %}
+<h1 style="color: white; margin-bottom: 30px;">📊 Reports</h1>
+
+<!-- Income vs Expense Chart -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header"
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 class="card-title" style="margin: 0;">📈 Income vs Expenses</h3>
+        <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary period-btn active" data-period="daily">Daily (30 days)</button>
+            <button class="btn btn-secondary period-btn" data-period="weekly">Weekly (12 weeks)</button>
+            <button class="btn btn-secondary period-btn" data-period="monthly">Monthly (12 months)</button>
+        </div>
+    </div>
+    <div style="position: relative; height: 350px;">
+        <canvas id="incomeExpenseChart"></canvas>
+    </div>
+</div>
+
+<div class="grid-2">
+    <a href="{% url 'reports:monthly' %}" class="card gradient-card"
+        style="text-decoration: none; color: white; background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #6B8DD6 100%); border: none;">
+        <h3 style="color: white;">📈 Monthly Report</h3>
+        <p style="color: rgba(255,255,255,0.85);">Compare income vs expenses month by month</p>
+    </a>
+
+    <a href="{% url 'reports:category' %}" class="card gradient-card"
+        style="text-decoration: none; color: white; background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%); border: none;">
+        <h3 style="color: white;">🍕 Category Report</h3>
+        <p style="color: rgba(255,255,255,0.85);">See spending breakdown by category</p>
+    </a>
+</div>
+
+<div class="card">
+    <h3 class="card-title">📥 Export Data</h3>
+    <p style="color: var(--gray); margin-bottom: 20px;">Download your transactions for backup or analysis</p>
+
+    <form method="get" action="{% url 'reports:export_csv' %}"
+        style="display: flex; gap: 15px; flex-wrap: wrap; align-items: end;">
+        <div class="form-group" style="margin: 0;">
+            <label class="form-label">From</label>
+            <input type="date" name="date_from" class="form-control">
+        </div>
+        <div class="form-group" style="margin: 0;">
+            <label class="form-label">To</label>
+            <input type="date" name="date_to" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary">Download CSV</button>
+        <a href="{% url 'reports:export_pdf' %}" class="btn btn-secondary">Export PDF</a>
+    </form>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    let chart = null;
+
+    async function loadChartData(period) {
+        const response = await fetch('/reports/chart-data/?period=' + period);
+        const data = await response.json();
+
+        if (chart) {
+            chart.destroy();
+        }
+
+        const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    {
+                        label: 'Income',
+                        data: data.income,
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                        borderColor: 'rgb(34, 197, 94)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Expenses',
+                        data: data.expense,
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#9ca3af',
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                        titleColor: '#fff',
+                        bodyColor: '#9ca3af',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            label: function (context) {
+                                return context.dataset.label + ': ₹' + context.raw.toLocaleString('en-IN');
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255,255,255,0.05)'
+                        },
+                        ticks: {
+                            color: '#9ca3af',
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255,255,255,0.05)'
+                        },
+                        ticks: {
+                            color: '#9ca3af',
+                            callback: function (value) {
+                                return '₹' + value.toLocaleString('en-IN');
+                            }
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Period button handlers
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            loadChartData(this.dataset.period);
+        });
+    });
+
+    // Initial load
+    loadChartData('daily');
+</script>
+
+<style>
+    .period-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+    .period-btn.active {
+        background: var(--primary);
+        color: white;
+    }
+
+    .period-btn:hover:not(.active) {
+        background: var(--bg-tertiary);
+    }
+</style>
+{% endblock %}

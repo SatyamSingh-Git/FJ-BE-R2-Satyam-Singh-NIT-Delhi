@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Transaction{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="color: white; margin-bottom: 30px;">✏️ Edit Transaction</h1>
+
+    <div class="card">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Category *</label>
+                <select name="category" class="form-control" required>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if cat.id==transaction.category_id %}selected{% endif %}>
+                        {{ cat.icon }} {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label class="form-label">Amount *</label>
+                    <input type="number" name="amount" class="form-control" step="0.01" min="0.01" required
+                        value="{{ transaction.amount }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Currency</label>
+                    <select name="currency" class="form-control">
+                        <option value="INR" {% if transaction.currency=='INR' %}selected{% endif %}>INR</option>
+                        <option value="USD" {% if transaction.currency=='USD' %}selected{% endif %}>USD</option>
+                        <option value="EUR" {% if transaction.currency=='EUR' %}selected{% endif %}>EUR</option>
+                        <option value="GBP" {% if transaction.currency=='GBP' %}selected{% endif %}>GBP</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Date *</label>
+                <input type="date" name="date" class="form-control" value="{{ transaction.date|date:'Y-m-d' }}"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="3">{{ transaction.description }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" name="is_refund" style="width: 18px; height: 18px;" {% if
+                        transaction.is_refund %}checked{% endif %}>
+                    <span>This is a refund</span>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Receipt</label>
+                {% if transaction.receipt %}
+                <p style="margin-bottom: 10px;">
+                    <a href="{{ transaction.receipt.url }}" target="_blank" class="btn btn-sm btn-secondary">View
+                        Current Receipt</a>
+                </p>
+                {% endif %}
+                <input type="file" name="receipt" class="form-control" accept="image/*,.pdf">
+                <small style="color: var(--gray);">Upload new to replace. Max 5MB.</small>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Update Transaction</button>
+                <a href="{% url 'transactions:detail' transaction.pk %}" class="btn btn-secondary">Cancel</a>
+                <a href="{% url 'transactions:delete' transaction.pk %}" class="btn btn-danger">Delete</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

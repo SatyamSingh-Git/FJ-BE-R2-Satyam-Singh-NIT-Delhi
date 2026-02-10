@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Notification Settings{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <a href="{% url 'accounts:profile' %}" style="color: white; text-decoration: none;">← Back to Profile</a>
+
+    <div class="card" style="margin-top: 20px;">
+        <h1 class="card-title">🔔 Notification Settings</h1>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" name="email_notifications" {{ profile.email_notifications|yesno:"checked,"
+                        }}>
+                    <span>Email Notifications</span>
+                </label>
+                <small style="color: var(--gray); margin-top: 5px; display: block;">
+                    Receive email alerts for budget warnings and important updates
+                </small>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label class="form-label">Budget Alert Threshold (%)</label>
+                <input type="number" name="budget_alert_threshold" class="form-control"
+                    value="{{ profile.budget_alert_threshold }}" min="50" max="100" style="max-width: 120px;">
+                <small style="color: var(--gray); margin-top: 5px; display: block;">
+                    Get notified when your spending reaches this percentage of your budget
+                </small>
+            </div>
+
+            <div style="margin-top: 30px; display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+                <a href="{% url 'accounts:profile' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3 class="card-title">Notification Types</h3>
+        <div style="color: var(--gray);">
+            <p style="margin-bottom: 10px;">📊 <strong>Budget Alerts</strong> - When you approach or exceed budget
+                limits</p>
+            <p style="margin-bottom: 10px;">⚠️ <strong>Anomaly Detection</strong> - Unusual spending patterns detected
+            </p>
+            <p style="margin-bottom: 10px;">💡 <strong>AI Insights</strong> - Personalized financial recommendations</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

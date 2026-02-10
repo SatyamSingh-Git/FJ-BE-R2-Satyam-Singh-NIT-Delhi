@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Budgets - Finance Tracker{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h1 style="color: white;">💵 Budgets</h1>
+    <a href="{% url 'budgets:create' %}" class="btn btn-primary">+ Create Budget</a>
+</div>
+
+<!-- Active Budgets -->
+<div class="card">
+    <h2 class="card-title">Active Budgets</h2>
+
+    {% if active_budgets %}
+    <div style="display: grid; gap: 20px;">
+        {% for budget in active_budgets %}
+        <div style="padding: 20px; background: var(--light); border-radius: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div>
+                    <strong>{{ budget.category.icon }} {{ budget.category.name }}</strong>
+                    <span class="badge"
+                        style="margin-left: 10px; background: {{ budget.category.color }}20; color: {{ budget.category.color }};">
+                        {{ budget.get_period_display }}
+                    </span>
+                </div>
+                <div style="text-align: right;">
+                    <span
+                        style="font-size: 1.3rem; font-weight: 600; {% if budget.spent_percentage >= 100 %}color: var(--danger);{% elif budget.spent_percentage >= 80 %}color: var(--warning);{% else %}color: var(--secondary);{% endif %}">
+                        {{ budget.spent_percentage|floatformat:0 }}%
+                    </span>
+                </div>
+            </div>
+
+            <div class="progress" style="height: 12px; margin-bottom: 10px;">
+                <div class="progress-bar {% if budget.spent_percentage >= 100 %}red{% elif budget.spent_percentage >= 80 %}yellow{% else %}green{% endif %}"
+                    style="width: {% if budget.spent_percentage > 100 %}100{% else %}{{ budget.spent_percentage }}{% endif %}%">
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; color: var(--gray); font-size: 0.9rem;">
+                <span>₹{{ budget.spent|floatformat:0|intcomma }} spent of ₹{{ budget.amount|floatformat:0|intcomma }}</span>
+                <span>₹{{ budget.remaining|floatformat:0|intcomma }} remaining</span>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <a href="{% url 'budgets:detail' budget.pk %}" class="btn btn-sm btn-secondary">View Details</a>
+                <a href="{% url 'budgets:update' budget.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h3>No active budgets</h3>
+        <p>Create a budget to start tracking your spending goals</p>
+        <a href="{% url 'budgets:create' %}" class="btn btn-primary">Create Budget</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Inactive Budgets -->
+{% if inactive_budgets %}
+<div class="card">
+    <h2 class="card-title" style="color: var(--gray);">Inactive Budgets</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Period</th>
+                <th>Amount</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for budget in inactive_budgets %}
+            <tr>
+                <td>{{ budget.category.icon }} {{ budget.category.name }}</td>
+                <td>{{ budget.get_period_display }}</td>
+                <td>₹{{ budget.amount|floatformat:0|intcomma }}</td>
+                <td><a href="{% url 'budgets:update' budget.pk %}" class="btn btn-sm btn-secondary">Reactivate</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

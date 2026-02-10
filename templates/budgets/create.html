@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Budget{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 0 auto;">
+    <h1 style="color: white; margin-bottom: 30px;">💵 Create Budget</h1>
+
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Category *</label>
+                <select name="category" class="form-control" required>
+                    <option value="">Select expense category</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.icon }} {{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+                <small style="color: var(--gray);">Only expense categories can have budgets</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Budget Amount *</label>
+                <input type="number" name="amount" class="form-control" step="0.01" min="1" required placeholder="0.00">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Period *</label>
+                <select name="period" class="form-control" required>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly" selected>Monthly</option>
+                    <option value="yearly">Yearly</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Start Date *</label>
+                <input type="date" name="start_date" class="form-control" value="{{ today }}" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Alert at (%)</label>
+                <input type="number" name="alert_threshold" class="form-control" value="80" min="50" max="100">
+                <small style="color: var(--gray);">Get notified when you reach this percentage</small>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Create Budget</button>
+                <a href="{% url 'budgets:list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

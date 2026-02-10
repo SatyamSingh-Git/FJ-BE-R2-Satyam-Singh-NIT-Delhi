@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Budget{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 0 auto;">
+    <h1 style="color: white; margin-bottom: 30px;">✏️ Edit Budget</h1>
+
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <input type="text" class="form-control" value="{{ budget.category.icon }} {{ budget.category.name }}"
+                    disabled>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Budget Amount *</label>
+                <input type="number" name="amount" class="form-control" step="0.01" min="1" required
+                    value="{{ budget.amount }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Alert at (%)</label>
+                <input type="number" name="alert_threshold" class="form-control"
+                    value="{{ budget.alert_at_percentage }}" min="50" max="100">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">End Date (optional)</label>
+                <input type="date" name="end_date" class="form-control"
+                    value="{% if budget.end_date %}{{ budget.end_date|date:'Y-m-d' }}{% endif %}">
+            </div>
+
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" name="is_active" {% if budget.is_active %}checked{% endif %}
+                        style="width: 18px; height: 18px;">
+                    <span>Active</span>
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+                <a href="{% url 'budgets:detail' budget.pk %}" class="btn btn-secondary">Cancel</a>
+                <a href="{% url 'budgets:delete' budget.pk %}" class="btn btn-danger">Delete</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

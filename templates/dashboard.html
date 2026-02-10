@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Dashboard - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">📊 Dashboard</h1>
+        <p class="page-subtitle">Welcome back! Here's your financial overview</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'transactions:create' %}" class="btn btn-primary">+ Add Transaction</a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-card-label">Total Balance</div>
+        <div class="stat-card-value">{{ currency_symbol }}{{ balance|floatformat:2|intcomma }}</div>
+        <div class="stat-card-meta">
+            <span class="positive">↑ {{ income_percent|default:"0" }}%</span>
+            <span>vs last month</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-label">Monthly Income</div>
+        <div class="stat-card-value green">+{{ currency_symbol }}{{ total_income|floatformat:2|intcomma }}</div>
+        <div class="stat-card-meta">
+            <span>{{ income_transactions }} transactions</span>
+        </div>
+        <div class="stat-progress">
+            <div class="stat-progress-bar" style="width: 100%; background: var(--accent-green);"></div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-label">Monthly Expenses</div>
+        <div class="stat-card-value red">-{{ currency_symbol }}{{ total_expenses|floatformat:2|intcomma }}</div>
+        <div class="stat-card-meta">
+            <span>{{ expense_transactions }} transactions</span>
+        </div>
+        <div class="stat-progress">
+            <div class="stat-progress-bar"
+                style="width: {{ expense_percent|default:0 }}%; background: var(--accent-red);"></div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-label">Savings Rate</div>
+        <div class="stat-card-value blue">{{ savings_rate|default:"0" }}%</div>
+        <div class="stat-card-meta">
+            {% if savings_rate >= 20 %}
+            <span class="positive">🏆 Excellent</span>
+            {% elif savings_rate >= 10 %}
+            <span>👍 Good</span>
+            {% else %}
+            <span class="negative">⚠️ Needs improvement</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Recent Transactions -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">📝 Recent Transactions</h3>
+            <a href="{% url 'transactions:list' %}" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+
+        {% if recent_transactions %}
+        <table class="table">
+            <tbody>
+                {% for t in recent_transactions %}
+                <tr>
+                    <td style="width: 40px;">
+                        <span style="font-size: 20px;">{{ t.category.icon }}</span>
+                    </td>
+                    <td>
+                        <div style="font-weight: 500;">{{ t.description|truncatechars:25 }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">{{ t.category.name }}</div>
+                    </td>
+                    <td style="text-align: right;">
+                        <div
+                            style="font-weight: 600; {% if t.category.type == 'income' %}color: var(--accent-green);{% else %}color: var(--accent-red);{% endif %}">
+                            <span>{% if t.category.type == 'income' %}+{% else %}-{% endif %}{{ t.currency }}</span>
+                            <span>{{ t.amount|floatformat:2|intcomma }}</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-muted);">{{ t.date|date:"M d" }}</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>No transactions yet</p>
+            <a href="{% url 'transactions:create' %}" class="btn btn-primary btn-sm">Add Your First Transaction</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Top Categories Column -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Top Spending Categories -->
+        <div class="card" style="flex: 1;">
+            <div class="card-header">
+                <h3 class="card-title">📂 Top Spending Categories</h3>
+                <a href="{% url 'categories:list' %}" class="btn btn-secondary btn-sm">Manage</a>
+            </div>
+
+            {% if expense_by_category %}
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                {% for cat in expense_by_category %}
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div
+                        style="width: 40px; height: 40px; background: {{ cat.color }}20; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                        {{ cat.icon }}
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span style="font-weight: 500;">{{ cat.name }}</span>
+                            <!-- Using inner span to prevent formatter wrapping inside template tags -->
+                            <span style="color: var(--accent-red); font-weight: 600;">
+                                -{{ currency_symbol }}<span>{{ cat.total|floatformat:0|intcomma }}</span>
+                            </span>
+                        </div>
+                        <div class="category-progress-bar">
+                            <div class="category-progress-fill"
+                                style="width: {{ cat.percent }}%; background: {{ cat.color }};"></div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No expense data yet</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Top Earning Categories -->
+        <div class="card" style="flex: 1;">
+            <div class="card-header">
+                <h3 class="card-title">💰 Top Earning Categories</h3>
+                <a href="{% url 'categories:list' %}" class="btn btn-secondary btn-sm">Manage</a>
+            </div>
+
+            {% if income_by_category %}
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                {% for cat in income_by_category %}
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div
+                        style="width: 40px; height: 40px; background: {{ cat.color }}20; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                        {{ cat.icon }}
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span style="font-weight: 500;">{{ cat.name }}</span>
+                            <!-- Using inner span to prevent formatter wrapping inside template tags -->
+                            <span style="color: var(--accent-green); font-weight: 600;">
+                                +{{ currency_symbol }}<span>{{ cat.total|floatformat:0|intcomma }}</span>
+                            </span>
+                        </div>
+                        <div class="category-progress-bar">
+                            <div class="category-progress-fill"
+                                style="width: {{ cat.percent }}%; background: {{ cat.color }};"></div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No income data yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Budget Overview -->
+{% if active_budgets %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">🎯 Active Budgets</h3>
+        <a href="{% url 'budgets:list' %}" class="btn btn-secondary btn-sm">Manage Budgets</a>
+    </div>
+
+    <div class="category-grid">
+        {% for budget in active_budgets %}
+        <div class="category-card {% if budget.percent > 100 %}over-budget{% endif %}">
+            {% if budget.percent > 100 %}
+            <span class="over-budget-badge">Over Budget</span>
+            {% endif %}
+            <div class="category-card-header">
+                <div class="category-icon" style="background: {{ budget.category.color }}20;">
+                    {{ budget.category.icon }}
+                </div>
+            </div>
+            <div class="category-name">{{ budget.category.name }}</div>
+            <div class="category-amount" style="{% if budget.percent > 100 %}color: var(--accent-red);{% endif %}">
+                {{ currency_symbol }}{{ budget.spent|floatformat:0|intcomma }}
+            </div>
+            <div class="category-budget">Budget: {{ currency_symbol }}{{ budget.amount|floatformat:0|intcomma }}</div>
+            <div class="category-progress">
+                <div class="category-progress-bar">
+                    <div class="category-progress-fill"
+                        style="width: {% if budget.percent > 100 %}100{% else %}{{ budget.percent }}{% endif %}%; background: {% if budget.percent > 100 %}var(--accent-red){% elif budget.percent > 80 %}var(--accent-orange){% else %}var(--accent-green){% endif %};">
+                    </div>
+                </div>
+                <span class="category-progress-text"
+                    style="{% if budget.percent > 100 %}color: var(--accent-red);{% elif budget.percent > 80 %}color: var(--accent-orange);{% endif %}">
+                    <span>
+                        {{ budget.percent|floatformat:0 }}%
+                    </span>
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- AI Insights Preview -->
+{% if ai_insights %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">🧠 AI Insights</h3>
+        <a href="{% url 'ai_features:insights' %}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+
+    <div class="grid-3">
+        {% for insight in ai_insights|slice:":3" %}
+        <div class="analysis-card">
+            <h4 style="font-size: 14px; margin-bottom: 8px;">{{ insight.title }}</h4>
+            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                <p>
+                    {{ insight.content|truncatechars:100 }}
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

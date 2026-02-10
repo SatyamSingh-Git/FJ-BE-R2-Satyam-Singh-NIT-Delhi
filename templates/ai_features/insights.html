@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}AI Insights - Finance Tracker{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 320px; gap: 24px; min-height: calc(100vh - 64px);">
+    <!-- Main Content -->
+    <div>
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">🧠 AI Insights</h1>
+                <p class="page-subtitle">Personalized financial strategy generated at {{ last_generated|default:"Never" }}</p>
+            </div>
+            <div class="page-actions">
+                <a href="{% url 'ai_features:generate_insights' %}" class="btn btn-primary">🔄 Refresh Insights</a>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="stat-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div class="stat-card-label">Predicted Monthly Spend</div>
+                        <div class="stat-card-value">₹{{ predicted_spend|floatformat:2|intcomma }}</div>
+                    </div>
+                    <span style="font-size: 20px;">📊</span>
+                </div>
+                <div class="stat-card-meta">
+                    <span class="{% if spend_change >= 0 %}negative{% else %}positive{% endif %}">
+                        {% if spend_change >= 0 %}↑{% else %}↓{% endif %} {{ spend_change|floatformat:1 }}%
+                    </span>
+                    <span>vs last month average</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div class="stat-card-label">Identified Savings</div>
+                        <div class="stat-card-value green">₹{{ identified_savings|floatformat:2|intcomma }}</div>
+                    </div>
+                    <span style="font-size: 20px;">💰</span>
+                </div>
+                <div class="stat-card-meta">
+                    <span class="positive">{{ savings_opportunities }} Potential</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div class="stat-card-label">Financial Health Score</div>
+                        <div class="stat-card-value"
+                            style="color: {% if health_score >= 80 %}var(--accent-green){% elif health_score >= 60 %}var(--accent-orange){% else %}var(--accent-red){% endif %};">
+                            {{ health_score|default:0 }}/100
+                        </div>
+                    </div>
+                    <span style="font-size: 20px;">✨</span>
+                </div>
+                <div class="stat-card-meta">
+                    {% if health_score >= 80 %}
+                    <span class="positive">Excellent</span>
+                    {% elif health_score >= 60 %}
+                    <span>Good</span>
+                    {% else %}
+                    <span class="negative">Needs Work</span>
+                    {% endif %}
+                </div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar"
+                        style="width: {{ health_score }}%; background: {% if health_score >= 80 %}var(--accent-green){% elif health_score >= 60 %}var(--accent-orange){% else %}var(--accent-red){% endif %};">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Priority Analysis -->
+        <h2 style="font-size: 18px; margin: 32px 0 20px; display: flex; align-items: center; gap: 8px;">⚡ Priority
+            Analysis</h2>
+
+        <div class="grid-2">
+            {% for insight in priority_insights %}
+            <div class="card"
+                style="border-left: 3px solid {% if insight.priority == 'high' %}var(--accent-red){% else %}var(--accent-blue){% endif %};">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                    <div class="category-icon"
+                        style="background: {% if insight.priority == 'high' %}rgba(239, 68, 68, 0.2){% else %}rgba(59, 130, 246, 0.2){% endif %}; font-size: 20px;">
+                        {{ insight.icon|default:"📊" }}
+                    </div>
+                    <span class="badge {% if insight.priority == 'high' %}badge-expense{% else %}badge-info{% endif %}"
+                        style="text-transform: uppercase; font-size: 10px;">
+                        {{ insight.priority|default:"info" }}
+                    </span>
+                </div>
+                <h3 style="font-size: 16px; margin-bottom: 12px;">{{ insight.title }}</h3>
+                <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px;">
+                    {{ insight.content }}
+                </p>
+                {% if insight.actions %}
+                <div style="display: flex; gap: 8px;">
+                    {% for action in insight.actions %}
+                    <a href="{{ action.url }}"
+                        class="btn {% if action.primary %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">{{ action.label }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="card" style="grid-column: span 2;">
+                <div class="empty-state">
+                    <h3>No insights generated yet</h3>
+                    <p>Click "Refresh Insights" to generate AI-powered financial insights</p>
+                    <a href="{% url 'ai_features:generate_insights' %}" class="btn btn-primary">Generate Insights</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- All Insights -->
+        {% if insights %}
+        <h2 style="font-size: 18px; margin: 32px 0 20px; display: flex; align-items: center; gap: 8px;">💡 All Insights
+        </h2>
+
+        <div class="grid-3">
+            {% for insight in insights %}
+            <div class="analysis-card">
+                <h4 style="font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                    {{ insight.icon|default:"💡" }} {{ insight.title }}
+                </h4>
+                <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">{{ insight.content }}</p>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                    Generated {{ insight.created_at|timesince }} ago
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Chat Assistant Sidebar -->
+    <div style="display: flex; flex-direction: column; height: calc(100vh - 64px); position: sticky; top: 32px;">
+        <div class="card" style="flex: 1; display: flex; flex-direction: column; margin-bottom: 0;">
+            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                💬 Chat Assistant
+            </h3>
+
+            <div id="chatMessages"
+                style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 8px;">
+                {% for msg in chat_history %}
+                <div
+                    style="display: flex; flex-direction: column; gap: 4px; align-items: {% if msg.role == 'user' %}flex-end{% else %}flex-start{% endif %};">
+                    <div
+                        style="max-width: 90%; padding: 12px 16px; border-radius: 16px; font-size: 13px; line-height: 1.5; {% if msg.role == 'user' %}background: var(--accent-blue); color: white; border-bottom-right-radius: 4px;{% else %}background: var(--bg-secondary); border-bottom-left-radius: 4px;{% endif %}">
+                        {{ msg.content }}
+                    </div>
+                    <span style="font-size: 10px; color: var(--text-muted);">
+                        {% if msg.role == 'user' %}You{% else %}AI{% endif %} • {{ msg.created_at|timesince }} ago
+                    </span>
+                </div>
+                {% empty %}
+                <div style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
+                    <p style="font-size: 24px; margin-bottom: 8px;">👋</p>
+                    <p style="font-size: 13px;">Ask me anything about your finances!</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <form action="{% url 'ai_features:chat_send' %}" method="post"
+                style="margin-top: 16px; display: flex; gap: 8px;">
+                {% csrf_token %}
+                <input type="text" name="message" placeholder="Type a message..." class="form-control" style="flex: 1;"
+                    required>
+                <button type="submit" class="btn btn-primary btn-icon">→</button>
+            </form>
+        </div>
+
+        <div
+            style="margin-top: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 10px; display: flex; align-items: center; gap: 12px;">
+            <span style="color: var(--accent-green);">⚡</span>
+            <div style="font-size: 12px;">
+                <div style="color: var(--accent-blue); font-weight: 600;">AI STATUS</div>
+                <div style="color: var(--text-muted);">{{ insights_count|default:0 }} insights generated</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-scroll chat to bottom
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+</script>
+{% endblock %}

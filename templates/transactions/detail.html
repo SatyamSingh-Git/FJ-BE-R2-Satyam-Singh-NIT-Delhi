@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ transaction.category.name }} - Transaction{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <a href="{% url 'transactions:list' %}" style="color: white; text-decoration: none;">← Back to Transactions</a>
+
+    <div class="card" style="margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+                <span style="font-size: 3rem;">{{ transaction.category.icon }}</span>
+                <h2>{{ transaction.category.name }}</h2>
+                <span
+                    class="badge {% if transaction.category.type == 'income' %}badge-income{% else %}badge-expense{% endif %}">
+                    {{ transaction.category.get_type_display }}
+                </span>
+                {% if transaction.is_refund %}
+                <span class="badge badge-income">Refund</span>
+                {% endif %}
+            </div>
+            <div style="text-align: right;">
+                <div
+                    style="font-size: 2.5rem; font-weight: 700; {% if transaction.category.type == 'income' %}color: var(--secondary);{% else %}color: var(--danger);{% endif %}">
+                    {{ transaction.currency }} {{ transaction.amount|floatformat:2|intcomma }}
+                </div>
+                <div style="color: var(--gray);">{{ transaction.date|date:"F d, Y" }}</div>
+            </div>
+        </div>
+
+        {% if transaction.description %}
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <h4 style="margin-bottom: 10px;">Description</h4>
+            <p>{{ transaction.description }}</p>
+        </div>
+        {% endif %}
+
+        {% if transaction.receipt %}
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <h4 style="margin-bottom: 10px;">📎 Receipt</h4>
+            <a href="{{ transaction.receipt.url }}" target="_blank" class="btn btn-secondary">View Receipt</a>
+        </div>
+        {% endif %}
+
+        <div
+            style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px;">
+            <a href="{% url 'transactions:update' transaction.pk %}" class="btn btn-primary">Edit</a>
+            <a href="{% url 'transactions:delete' transaction.pk %}" class="btn btn-danger">Delete</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Category Report{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h1 style="color: white;">🍕 Category Report</h1>
+    <div style="display: flex; gap: 10px;">
+        <a href="?period=week"
+            class="btn {% if period == 'week' %}btn-primary{% else %}btn-secondary{% endif %}">Week</a>
+        <a href="?period=month"
+            class="btn {% if period == 'month' %}btn-primary{% else %}btn-secondary{% endif %}">Month</a>
+        <a href="?period=year"
+            class="btn {% if period == 'year' %}btn-primary{% else %}btn-secondary{% endif %}">Year</a>
+    </div>
+</div>
+
+<p style="color: white; margin-bottom: 20px;">{{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}</p>
+
+<div class="grid-2">
+    <!-- Expenses by Category -->
+    <div class="card">
+        <h3 class="card-title" style="color: var(--danger);">💸 Expenses: ₹{{ total_expense|floatformat:0|intcomma }}
+        </h3>
+        {% if expense_data %}
+        {% for item in expense_data %}
+        <div style="margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>{{ item.category__icon }} {{ item.category__name }} ({{ item.count }})</span>
+                <span style="font-weight: 600;">₹{{ item.total|floatformat:0|intcomma }}</span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar red"
+                    style="width: {% widthratio item.total total_expense 100 %}%; background: {{ item.category__color }};">
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="color: var(--gray);">No expenses in this period</p>
+        {% endif %}
+    </div>
+
+    <!-- Income by Category -->
+    <div class="card">
+        <h3 class="card-title" style="color: var(--secondary);">💰 Income: ₹{{ total_income|floatformat:0|intcomma }}
+        </h3>
+        {% if income_data %}
+        {% for item in income_data %}
+        <div style="margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>{{ item.category__icon }} {{ item.category__name }} ({{ item.count }})</span>
+                <span style="font-weight: 600;">₹{{ item.total|floatformat:0|intcomma }}</span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar green"
+                    style="width: {% widthratio item.total total_income 100 %}%; background: {{ item.category__color }};">
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="color: var(--gray);">No income in this period</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
