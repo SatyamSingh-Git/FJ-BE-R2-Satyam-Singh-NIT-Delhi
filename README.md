@@ -53,11 +53,11 @@ The application follows a monolithic architecture with modular Django apps, inte
 
 ```mermaid
 graph TD
-    User[Clients (Web/Mobile)] -->|HTTPS| Nginx[Web Server]
+    User([Clients Web/Mobile]) -->|HTTPS| Nginx[Web Server]
     Nginx -->|WSGI| Django[Django App Server]
     
     subgraph "Core Backend (Django)"
-        Django --> Auth[Authentication (Allauth)]
+        Django --> Auth[Authentication Allauth]
         Django --> Trans[Transaction Engine]
         Django --> Report[Reporting System]
         Django --> AI[AI Service Layer]
@@ -65,7 +65,7 @@ graph TD
     
     subgraph "Data Layer"
         Django -->|SQL| DB[(PostgreSQL Database)]
-        Django -->|Media| Storage[File Storage (Receipts/PDFs)]
+        Django -->|Media| Storage[File Storage Receipts/PDFs]
     end
     
     subgraph "External Services"
