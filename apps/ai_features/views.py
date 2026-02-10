@@ -55,8 +55,82 @@ def insights_list(request):
         is_dismissed=False
     ).order_by('-created_at')[:20]
     
+    # Calculate Stats for Context
+    today = date.today()
+    month_start = today.replace(day=1)
+    
+    transactions = Transaction.objects.filter(user=request.user)
+    
+    # Predicted Spend (Simple projection based on daily average this month)
+    days_passed = today.day
+    current_month_expense = transactions.filter(
+        date__gte=month_start, 
+        category__type='expense',
+        is_refund=False
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    
+    predicted_spend = Decimal('0.00')
+    if days_passed > 0:
+        daily_avg = current_month_expense / days_passed
+        days_in_month = 30 # Approx
+        predicted_spend = daily_avg * days_in_month
+        
+    # Last month average for comparison
+    last_month_start = (month_start - timedelta(days=1)).replace(day=1)
+    last_month_end = month_start - timedelta(days=1)
+    last_month_expense = transactions.filter(
+        date__gte=last_month_start,
+        date__lte=last_month_end,
+        category__type='expense',
+        is_refund=False
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    
+    spend_change = 0
+    if last_month_expense > 0:
+        spend_change = ((predicted_spend - last_month_expense) / last_month_expense) * 100
+        
+    # Health Score Calculation
+    # 1. Savings Rate (50%)
+    # 2. Budget Adherence (30%)
+    # 3. Income Stability (20%) - simplified to just "has income"
+    
+    current_month_income = transactions.filter(
+        date__gte=month_start, 
+        category__type='income'
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    
+    score = 0
+    # Savings Rate Score (target 20%)
+    if current_month_income > 0:
+        savings_rate = ((current_month_income - current_month_expense) / current_month_income) * 100
+        if savings_rate >= 20: score += 50
+        elif savings_rate >= 10: score += 30
+        elif savings_rate > 0: score += 10
+    
+    # Budget Adherence (if no over-budget categories) - simplified
+    # (Assuming no budgets set = neutral 15 points)
+    score += 30 # Placeholder optimistically
+    
+    # Has Income
+    if current_month_income > 0:
+        score += 20
+        
+    health_score = min(score, 100)
+    
+    # Identified Savings (Sum of 'potential' from insights or dummy)
+    identified_savings = Decimal('0.00')
+    # Use existing insights to sum up potential savings text if structured, 
+    # but for now, let's use a heuristic: 5% of expense is usually saveable
+    identified_savings = current_month_expense * Decimal('0.05')
+    
     context = {
         'insights': insights,
+        'predicted_spend': predicted_spend,
+        'spend_change': spend_change,
+        'identified_savings': identified_savings,
+        'savings_opportunities': int(identified_savings / 500) if identified_savings else 0,
+        'health_score': health_score,
+        'last_generated': insights[0].created_at if insights else None
     }
     return render(request, 'ai_features/insights.html', context)
 

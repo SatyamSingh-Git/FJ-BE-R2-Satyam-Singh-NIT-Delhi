@@ -51,8 +51,41 @@ def dashboard(request):
         is_refund=True
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
     
-    savings = income_total - expense_total + refunds_total
+    balance = income_total - expense_total + refunds_total
     
+    # Counts
+    income_transactions = month_transactions.filter(category__type='income').count()
+    expense_transactions = month_transactions.filter(category__type='expense').count()
+    
+    # Savings Rate
+    savings_rate = 0
+    if income_total > 0:
+        savings_rate = round((balance / income_total) * 100)
+    
+    # Comparison with last month
+    last_month_start = (month_start - timedelta(days=1)).replace(day=1)
+    last_month_end = month_start - timedelta(days=1)
+    
+    last_month_transactions = Transaction.objects.filter(
+        user=user,
+        date__gte=last_month_start,
+        date__lte=last_month_end
+    )
+    
+    last_month_income = last_month_transactions.filter(category__type='income').aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    last_month_expense = last_month_transactions.filter(category__type='expense', is_refund=False).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    
+    income_percent = 0
+    if last_month_income > 0:
+        income_percent = round(((income_total - last_month_income) / last_month_income) * 100)
+        
+    # Expense percent for progress bar (expenses as % of income)
+    expense_percent = 0
+    if income_total > 0:
+        expense_percent = min(round((expense_total / income_total) * 100), 100)
+
+    # ... (YTD calculations remain similar, just ensure variable names match)
+
     # YTD Transactions for Top Categories
     year_start = today.replace(month=1, day=1)
     
@@ -158,10 +191,15 @@ def dashboard(request):
     ).order_by('-created_at')[:5]
     
     context = {
-        'income_total': income_total,
-        'expense_total': expense_total,
-        'refunds_total': refunds_total,
-        'savings': savings,
+        'total_income': income_total,  # Fixed name
+        'total_expenses': expense_total, # Fixed name
+        'balance': balance, # Fixed name
+        'savings_rate': savings_rate, # Added
+        'income_transactions': income_transactions, # Added
+        'expense_transactions': expense_transactions, # Added
+        'income_percent': income_percent, # Added
+        'expense_percent': expense_percent, # Added
+        
         'expense_by_category': list(expense_by_category),
         'income_by_category': list(income_by_category),
         'trend_labels': list(trend_data.keys()),
@@ -172,6 +210,7 @@ def dashboard(request):
         'budget_alerts': budget_alerts,
         'unread_notifications': unread_notifications,
         'current_month': today.strftime('%B %Y'),
+        'currency_symbol': '₹', # Added default currency symbol
     }
     
     return render(request, 'dashboard.html', context)
