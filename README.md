@@ -7,44 +7,6 @@ A robust, feature-rich financial management application built with **Django 5.1*
 ## 📌 Introduction
 
 The **Personal Finance Tracker** is a modern web application that simplifies financial management. It goes beyond simple tracking by integrating **DeepSeek AI** to provide personalized financial advice and spending anomaly detection. With a responsive dark-themed UI, bank statement parsing, and comprehensive reporting, it serves as a complete solution for personal finance.
-
----
-
-## 🚀 Key Features
-
-### 📊 Interactive Dashboard
-- **Real-time Overview**: Instant view of total balance, income, expenses, and savings.
-- **Visual Analytics**: Dynamic charts (Income vs Expense, Category Breakdown) using **Chart.js**.
-- **Recent Activity**: Quick access to latest transactions with color-coded status.
-
-### 🤖 AI Financial Assistant
-- **Smart Chat Interface**: Chat with your financial data using **DeepSeek AI** (via OpenRouter).
-- **Context-Aware**: The AI automatically knows your monthly spending, income, and savings context.
-- **Spending Insights**: Automated detection of spending anomalies and personalized financial advice.
-
-### 💳 Transaction Management
-- **Comprehensive Tracking**: Log income and expenses with categories, dates, and descriptions.
-- **Receipt Uploads**: Attach images/PDFs to transactions for record-keeping.
-- **Multi-Currency Support**: Track transactions in different currencies with automatic conversion estimates.
-
-### 🏦 Bank Integration
-- **Statement Import**: Upload **PDF** or **CSV** bank statements.
-- **Auto-Categorization**: Intelligent mapping of bank description patterns to your categories.
-- **Duplicate Detection**: Smart logic prevents double-entry of transactions.
-
-### 📉 Reports & Export
-- **Monthly Reports**: Detailed month-over-month comparison.
-- **Category Analysis**: Deep dive into where your money goes.
-- **Export Options**: Download reports as **CSV** or **PDF** for offline analysis.
-
-### 🔔 Smart Notifications
-- **Budget Alerts**: Email notifications when you exceed category budgets (Integrated with **SendGrid**).
-- **Weekly Summaries**: Scheduled emails with your financial health summary.
-
-### 🔒 Security & Auth
-- **Google OAuth**: Fast and secure login with Google (via **Django Allauth**).
-- **Role-Based Access**: Secure data isolation ensures users only see their own data.
-
 ---
 
 ## 🏗️ System Architecture
@@ -99,6 +61,41 @@ sequenceDiagram
     AI-->>View: Formatted Markdown Response
     View-->>User: Display Chat Response
 ```
+---
+## 🚀 Key Features
+
+### 📊 Interactive Dashboard
+- **Real-time Overview**: Instant view of total balance, income, expenses, and savings.
+- **Visual Analytics**: Dynamic charts (Income vs Expense, Category Breakdown) using **Chart.js**.
+- **Recent Activity**: Quick access to latest transactions with color-coded status.
+
+### 🤖 AI Financial Assistant
+- **Smart Chat Interface**: Chat with your financial data using **DeepSeek AI** (via OpenRouter).
+- **Context-Aware**: The AI automatically knows your monthly spending, income, and savings context.
+- **Spending Insights**: Automated detection of spending anomalies and personalized financial advice.
+
+### 💳 Transaction Management
+- **Comprehensive Tracking**: Log income and expenses with categories, dates, and descriptions.
+- **Receipt Uploads**: Attach images/PDFs to transactions for record-keeping.
+- **Multi-Currency Support**: Track transactions in different currencies with automatic conversion estimates.
+
+### 🏦 Bank Integration
+- **Statement Import**: Upload **PDF** or **CSV** bank statements.
+- **Auto-Categorization**: Intelligent mapping of bank description patterns to your categories.
+- **Duplicate Detection**: Smart logic prevents double-entry of transactions.
+
+### 📉 Reports & Export
+- **Monthly Reports**: Detailed month-over-month comparison.
+- **Category Analysis**: Deep dive into where your money goes.
+- **Export Options**: Download reports as **CSV** or **PDF** for offline analysis.
+
+### 🔔 Smart Notifications
+- **Budget Alerts**: Email notifications when you exceed category budgets (Integrated with **SendGrid**).
+- **Weekly Summaries**: Scheduled emails with your financial health summary.
+
+### 🔒 Security & Auth
+- **Google OAuth**: Fast and secure login with Google (via **Django Allauth**).
+- **Role-Based Access**: Secure data isolation ensures users only see their own data.
 
 ---
 
