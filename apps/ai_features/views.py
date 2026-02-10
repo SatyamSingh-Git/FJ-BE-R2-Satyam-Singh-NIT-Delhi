@@ -306,6 +306,18 @@ def chat_send(request):
         date__gte=thirty_days_ago
     ).aggregate(total=Sum('amount'))['total'] or 0
     
+    # Top spending categories
+    top_categories = Transaction.objects.filter(
+        user=request.user,
+        category__type='expense',
+        date__gte=thirty_days_ago,
+        is_refund=False
+    ).values('category__name').annotate(
+        total=Sum('amount')
+    ).order_by('-total')[:5]
+
+    category_summary = "\n".join([f"- {c['category__name']}: ₹{c['total']}" for c in top_categories])
+
     # Build messages for API
     api_messages = [
         {
@@ -315,6 +327,9 @@ The user's financial context (last 30 days):
 - Total Income: ₹{recent_income}
 - Total Expenses: ₹{recent_spending}
 - Savings: ₹{recent_income - recent_spending}
+
+Top Spending Categories:
+{category_summary}
 
 Be concise, helpful, and provide actionable advice. Keep responses under 150 words."""
         }
