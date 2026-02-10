@@ -7,11 +7,20 @@
 <div class="auth-container">
     <div class="auth-card">
         <div class="auth-header">
-            <h1>{% if user.is_authenticated %}{% trans "Connect Account" %}{% else %}{% trans "Sign In" %}{% endif %}
+            <h1>
+                {% if user.is_authenticated %}
+                {% trans "Connect Account" %}
+                {% else %}
+                {% trans "Sign In" %}
+                {% endif %}
             </h1>
-            <p>{% if process == "connect" %}{% blocktrans with provider.name as provider %}Connect {{ provider }}{%
-                endblocktrans %}{% else %}{% blocktrans with provider.name as provider %}Sign In via {{ provider }}{%
-                endblocktrans %}{% endif %}</p>
+            <p>
+                {% if process == "connect" %}
+                {% blocktrans with provider.name as provider %}Connect {{ provider }}{% endblocktrans %}
+                {% else %}
+                {% blocktrans with provider.name as provider %}Sign In via {{ provider }}{% endblocktrans %}
+                {% endif %}
+            </p>
         </div>
 
         <div class="auth-body"
@@ -61,6 +70,7 @@
         font-size: 24px;
         margin-bottom: 8px;
         font-weight: 700;
+        color: var(--text-primary);
     }
 
     .auth-header p {
