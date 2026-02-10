@@ -1,0 +1,2 @@
+error: src refspec main does not match any
+error: failed to push some refs to 'https://github.com/SatyamSingh-Git/FJ-BE-R2-Satyam-Singh-NIT-Delhi.git'
