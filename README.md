@@ -2,7 +2,6 @@
 
 A robust, feature-rich financial management application built with **Django 5.1**. Designed to help users track income/expenses, visualize spending trends, set budgets, and receive **AI-powered financial insights**.
 
----
 
 ## 📌 Introduction
 
