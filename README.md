@@ -8,8 +8,8 @@ A robust, feature-rich financial management application built with **Django 5.1*
 The **Personal Finance Tracker** is a modern web application that simplifies financial management. It goes beyond simple tracking by integrating **DeepSeek AI** to provide personalized financial advice and spending anomaly detection. With a responsive dark-themed UI, bank statement parsing, and comprehensive reporting, it serves as a complete solution for personal finance.
 
 ---
-# Live Link: https://fj-be-r2-satyam-singh-nit-delhi.onrender.com/
-# Demo video: https://drive.google.com/file/d/17V0ozOJbOIETGYUmVO22wTEnLhA-QV1e/view?usp=sharing
+## Live Link: https://fj-be-r2-satyam-singh-nit-delhi.onrender.com/
+## Demo video: https://drive.google.com/file/d/17V0ozOJbOIETGYUmVO22wTEnLhA-QV1e/view?usp=sharing
 ---
 
 ## 🏗️ System Architecture
