@@ -17,6 +17,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('accounts', '0001_initial'), # Depend on the initial migration of your custom user model app if you have one, or 'auth'
         ('auth', '0012_alter_user_first_name_max_length'),
+         ('categories', '0001_initial'),
     ]
 
     operations = [
