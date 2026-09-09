@@ -1,8 +1,4 @@
-databases:
-  - name: finance_tracker_db
-    databaseName: finance_tracker
-    user: finance_user
-    plan: free
+
 
 services:
   - type: web
@@ -14,10 +10,6 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0
-      - key: DATABASE_URL
-        fromDatabase:
-          name: finance_tracker_db
-          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: WEB_CONCURRENCY
